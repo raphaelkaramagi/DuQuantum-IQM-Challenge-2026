@@ -6,3 +6,6 @@ venv/
 .env
 .DS_Store
 info.txt
+
+# Local simulation outputs
+/results/simulation/
