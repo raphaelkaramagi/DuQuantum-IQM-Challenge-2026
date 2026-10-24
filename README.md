@@ -1,3 +1,76 @@
+# DuQuantum: distance-3 surface code memory on IQM Garnet
+
+We ran a distance-3 rotated surface-code Z-memory experiment (17 qubits, no mid-circuit reset) on IQM Garnet through Qrisp's `DetectorExperiment`, decoded it offline with PyMatching, and fitted the logical error rate per round. All numbers below come from files in `results/` and regenerate with `python analyze_hardware.py`.
+
+## Results summary
+
+| | |
+|---|---|
+| Device | IQM Garnet (20 qubits, 30 CZ couplers), calibration set `a18a947f`, Oct 24 2026, 22:05–22:14 UTC |
+| Layout | The only zero-SWAP placement on Garnet (patch P00); exactly 24 CZ per round, every CZ on a hardware coupler |
+| Logical error per round, no DD | **ε_L = 0.102 ± 0.001** (bootstrap 95% CI [0.099, 0.106]), rounds 1–3, 15,000 shots each |
+| Logical error per round, with DD | **ε_L = 0.076 ± 0.001** ([0.074, 0.079]), rounds 1–5, 5,000 shots each |
+| Main limit on ε_L | Idle decoherence during mid-circuit readout: Garnet's gate and readout errors alone predict ε_L ≈ 0.015 |
+
+### Hardware data (logical error probability P_L, decoded)
+
+| rounds | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| Zero-SWAP P00, no DD (E1+E2+E3 pooled, 15k shots) | 0.045 | 0.258 | 0.332 | 0.398 | 0.440 |
+| Zero-SWAP P00, DD on (E2, 5k shots) | 0.040 | 0.127 | 0.210 | 0.271 | 0.335 |
+| Naive layout + SWAP routing (E3, 5k shots) | 0.261 | 0.409 | 0.493 | 0.500 | 0.503 |
+| Stim, Garnet gate + readout errors, no idling | 0.032 | 0.038 | 0.044 | 0.052 | 0.057 |
+| Stim, uniform 0.3% | 0.003 | 0.004 | 0.008 | 0.008 | 0.011 |
+
+Standard errors are 0.002–0.007. Fits follow the README model 2P = 1 − (1 − 2ε_L)^n and use only points with P_L < 0.35. Without round 1 the fitted rates are 0.152 (no DD) and 0.085 (DD): a single ε_L does not describe round 1 well, because in the first round only the 4 Z-type ancillas give detectors (8 per later round) and the data qubits have idled least. Full tables: `results/tables/hardware_fits.csv`, `hardware_summary.csv`. Figures: `figures/hardware_ler.png`, `figures/layout_cost.png`, `figures/garnet_layout.png`.
+
+### By judging criterion
+
+**1. Correctness and pipeline (30%).** `python -m pytest verification -q` passes 70 tests: noiseless detectors are deterministic for rounds 1–5, the circuit-level distance is 3, the no-reset detector rewrite matches the provided Qrisp converter, a negative control (dropping resets without rewriting detectors) is rejected by Stim, the Qrisp experiment reproduces direct Stim LER within 3σ, both pipelines round-trip, and a noiseless dry run through IQM's own circuit converter and result parser gives zero detector events. On hardware, raw counts are saved for every job and the decoded events are re-derived from them exactly.
+
+**2. Sophistication (30%).** A subgraph-isomorphism search (`layout.enumerate_patches`) proves Garnet has exactly one SWAP-free placement of the code. `layout.verify_layout` checks every transpiled circuit: 0 SWAPs, only native PRX/CZ gates, all CZs on couplers, and exactly 24·rounds CZs. Merging single-qubit gates halves circuit depth (53 vs 105 layers at 5 rounds) with the same CZs. On hardware, a naive placement routed by IQM's router needs 54–93 extra CZs and raises P_L at one round from 0.040 to 0.261 (E3, interleaved in the same session).
+
+**3. LER statistics (20%).** Three no-DD replicates taken within 10 minutes agree (rounds 1–3 fits 0.104, 0.104, 0.098). Errors are binomial per point with 500-sample bootstrap intervals on ε_L. The fit is reported with and without round 1.
+
+**4. Flexibility (20%).** Dynamical decoupling (IQM `CircuitCompilationOptions(dd_mode=ENABLED)`) cuts P_L at two rounds from 0.253 to 0.127 and ε_L over rounds 1–3 from 0.102 to 0.065, measured with DD on and off interleaved by round count. Decoder prior sensitivity (`noise_sweep.py`) and calibration-derived noise models (`iqm_utils/noise_for_patch.py`, `verification/score_patch.py`) are included.
+
+**Bonus: what limits the LER.** Gate and readout errors from Garnet's own calibration (mean CZ error 0.62%, readout error 1.8% on the patch) predict ε_L ≈ 0.015 in simulation, about 7× below hardware. Mean T2 on the patch is about 10 µs, and every round includes mid-circuit readout during which the other qubits idle; dynamical decoupling, which only acts on idling qubits, removes about a third of the error. Without reset, each bulk detector compares outcomes two rounds apart, which doubles the weight of readout and idle errors on ancillas. Per-ancilla firing (`results/tables/hotspots.csv`) does not track readout error or T2 (Spearman |ρ| < 0.2 over 8 ancillas); the Z ancilla on QB15 fires on 54% of shots, which points to a systematic error at that qubit that the calibration numbers do not capture.
+
+### Limitations
+
+- One calibration set and one session (about 10 minutes). A drift replicate several hours later (E4) has not been run yet.
+- Only one zero-SWAP patch exists on Garnet, so a patch-quality scan was replaced by the layout-cost comparison.
+- The calibrated simulation omits idle noise, because gate and readout durations were not available.
+- The default decoder prior is uniform 0.3%; a calibration-weighted decoder was not applied to hardware data.
+
+### Reproduce
+
+```bash
+pip install -r requirements.txt
+python -m pytest verification -q          # 70 tests, no hardware
+python dryrun.py                           # noiseless run through IQM's converter, no hardware
+python analyze_hardware.py                 # re-decode results/raw/, fits, tables, figures
+# hardware (needs IQM_TOKEN in the environment or .env):
+python hw_setup.py garnet                  # backend facts and patch search, submits nothing
+python run_experiments.py E1 E2 E3         # run matrix; E4 = drift replicate
+```
+
+### Code map
+
+| File | Purpose |
+|---|---|
+| `surface_code.py`, `noreset_tools.py` | Stim circuit generation and the no-reset detector rewrite |
+| `stim_to_qrisp.py` (provided) | Stim circuit to Qrisp `DetectorExperiment` |
+| `layout.py` | Zero-SWAP patch search, fixed-layout pass, transpilation, `verify_layout` |
+| `run_on_hardware.py` | Job submission, IQM post-processing, raw data saving and loading |
+| `run_experiments.py` | Hardware run matrix with calibration snapshots |
+| `analyze_hardware.py` | Hardware decoding, fits, simulations, figures |
+| `decode.py`, `noise_sweep.py` | MWPM decoding, ε_L fit and bootstrap, simulation baseline, prior sweep |
+| `calibration.py`, `iqm_utils/noise_for_patch.py`, `verification/score_patch.py` | Calibration snapshots, calibration-derived noise, patch scoring |
+| `results/` | Raw hardware data (`raw/`), tables, layout and backend facts, `HARDWARE.md` |
+
+---
+
 # Surface Code on IQM Emerald — Challenge Overview
 
 ## Quantum Error correction - Memory experiment
@@ -202,61 +275,6 @@ Core circuit API (`surface_code.py`):
 The no-reset rewrite lives in `noreset_tools.to_noreset()` and is tested to agree detector-for-detector with `stim_to_qrisp._analyse()`.
 The negative control (MR→M without rewriting) runs for rounds 2–5 only: at 1 round each ancilla is measured once, so the two circuits are identical.
 
-Run: `python -m pytest verification -q` (latest run, 2026-10-24):
-
-```
-............................................FFFFF                        [100%]
-=========================== short test summary info ============================
-FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[1]
-FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[2]
-FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[3]
-FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[4]
-FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[5]
-PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[1]
-PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[2]
-PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[3]
-PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[4]
-PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[5]
-PASSED verification/test_circuit.py::test_counts[1]
-PASSED verification/test_circuit.py::test_counts[2]
-PASSED verification/test_circuit.py::test_counts[3]
-PASSED verification/test_circuit.py::test_counts[4]
-PASSED verification/test_circuit.py::test_counts[5]
-PASSED verification/test_circuit.py::test_circuit_level_distance[True-1]
-PASSED verification/test_circuit.py::test_circuit_level_distance[True-2]
-PASSED verification/test_circuit.py::test_circuit_level_distance[True-3]
-PASSED verification/test_circuit.py::test_circuit_level_distance[True-4]
-PASSED verification/test_circuit.py::test_circuit_level_distance[True-5]
-PASSED verification/test_circuit.py::test_circuit_level_distance[False-1]
-PASSED verification/test_circuit.py::test_circuit_level_distance[False-2]
-PASSED verification/test_circuit.py::test_circuit_level_distance[False-3]
-PASSED verification/test_circuit.py::test_circuit_level_distance[False-4]
-PASSED verification/test_circuit.py::test_circuit_level_distance[False-5]
-PASSED verification/test_circuit.py::test_naive_mr_to_m_is_non_deterministic[2]
-PASSED verification/test_circuit.py::test_naive_mr_to_m_is_non_deterministic[3]
-PASSED verification/test_circuit.py::test_naive_mr_to_m_is_non_deterministic[4]
-PASSED verification/test_circuit.py::test_naive_mr_to_m_is_non_deterministic[5]
-PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[1]
-PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[2]
-PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[3]
-PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[4]
-PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[5]
-PASSED verification/test_circuit.py::test_build_pair_twins_match[1]
-PASSED verification/test_circuit.py::test_build_pair_twins_match[2]
-PASSED verification/test_circuit.py::test_build_pair_twins_match[3]
-PASSED verification/test_circuit.py::test_build_pair_twins_match[4]
-PASSED verification/test_circuit.py::test_build_pair_twins_match[5]
-PASSED verification/test_circuit.py::test_to_qiskit_hw[1]
-PASSED verification/test_circuit.py::test_to_qiskit_hw[2]
-PASSED verification/test_circuit.py::test_to_qiskit_hw[3]
-PASSED verification/test_circuit.py::test_to_qiskit_hw[4]
-PASSED verification/test_circuit.py::test_to_qiskit_hw[5]
-PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[1]
-PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[2]
-PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[3]
-PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[4]
-PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[5]
-5 failed, 44 passed in 5.90s
-```
+Run: `python -m pytest verification -q` (Oct 24 2026, after all hardware runs): **70 passed**. This covers `test_circuit.py` (circuit correctness), `test_pipeline.py` (Qiskit path round trip with `decode.py`), `test_qrisp_experiment.py` (Qrisp experiment vs direct Stim) and `test_layout.py` (layout proofs and a noiseless dry run on Garnet's connectivity).
 
 The 5 `test_roundtrip_matches_direct_stim` failures are expected until `decode_events` / `decode_ler` (decoder owner) land in the repo.

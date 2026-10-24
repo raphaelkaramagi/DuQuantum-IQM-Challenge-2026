@@ -84,7 +84,7 @@ def build_experiment(rounds, distance=3, noise=None):
     return stim_to_detector_experiment(c, no_reset=True)
 
 
-def prepare(rounds, layout, connectivity, distance=3, noise=None, fuse=True):
+def prepare(rounds, layout, connectivity, distance=3, noise=None, fuse=True, route=False):
     """Trace, transpile with the fixed layout, and verify. No network access."""
     import jax
     from qrisp.jasp import make_jaspr
@@ -94,9 +94,11 @@ def prepare(rounds, layout, connectivity, distance=3, noise=None, fuse=True):
     qc = jaspr.to_qc()[-1]
     post = jax.jit(jaspr.extract_post_processing())
     n_physical = max(max(e) for e in connectivity) + 1
-    qc_t, stats = transpile_qrisp(qc, layout, n_physical, fuse)
-    stats["fuse"] = bool(fuse)
-    report = verify_layout(qc_t, connectivity, expect_cz=24 * rounds)
+    qc_t, stats = transpile_qrisp(qc, layout, n_physical, fuse, connectivity if route else None)
+    stats["fuse"], stats["routed"] = bool(fuse), bool(route)
+    # a routed layout adds 3 CZ per SWAP, so only the zero-SWAP path can assert 24 CZ per round
+    report = verify_layout(qc_t, connectivity, expect_cz=None if route else 24 * rounds)
+    stats["extra_cz"] = report["cz"] - 24 * rounds
     return {"exp": exp, "stim": exp.to_stim(), "qc": qc, "qc_t": qc_t, "post": post,
             "stats": stats, "verify": report, "n_clbits": len(qc.clbits)}
 
@@ -132,14 +134,14 @@ def _compilation_options(dd):
 
 
 def run_batch(rounds_list, shots, layout, dd=False, backend=None, patch_id="P??", tag=None,
-              calib_before=None, calib_after=None, save=True, distance=3, noise=None, fuse=True):
+              calib_before=None, calib_after=None, save=True, distance=3, noise=None, fuse=True, route=False):
     """One IQM job holding one circuit per entry of rounds_list (fewer queue waits).
     Returns a list with one run_experiment-style dict per circuit, all sharing job_id."""
     if backend is None:
         raise ValueError("pass backend=connect() (or a FakeIQMBackend for a dry run)")
     from qrisp import PassManager
 
-    preps = [prepare(r, layout, backend.connectivity, distance, noise, fuse) for r in rounds_list]
+    preps = [prepare(r, layout, backend.connectivity, distance, noise, fuse, route) for r in rounds_list]
     opts = _compilation_options(dd)
 
     old_pm, backend.pm = backend.pm, PassManager()     # circuits are already transpiled + verified

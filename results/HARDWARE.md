@@ -1,6 +1,6 @@
 # Hardware and layout
 
-Status as of Sat Oct 24, ~5:15 PM ET. Labels: **verified** = we ran it, **read** = from code or docs, **unknown** = not checked yet.
+Status as of Sat Oct 24, ~6:30 PM ET. Labels: **verified** = we ran it, **read** = from code or docs, **unknown** = not checked yet.
 
 ## Device facts (verified, `results/backend_info.json`)
 
@@ -48,9 +48,26 @@ One job, two circuits (rounds 1 and 2), 1000 shots each, patch P00, no DD, fused
 - A two-point fit (`decode.fit_eps`, rounds 1-2) gives eps_L of about 0.057 per round. This is indicative only; it needs rounds 1-5 and the P < 0.35 rule.
 - Round-2 firing is highest on bulk detectors, peaking at 38.8%. Without reset, each bulk detector combines measurements two rounds apart, so ancilla idling and readout errors count twice. This is a hypothesis for the hot-spot map, not a finding yet.
 
+## Run matrix (verified, Sat 22:04-22:14 UTC, calibration set `a18a947f`, 5000 shots per circuit)
+
+`python run_experiments.py E1 E2 E3`; calibration snapshots before/after each experiment in `calib/`, job list in `results/tables/experiment_log.csv`, analysis with `python analyze_hardware.py`.
+
+| experiment | what | rounds 1 / 2 / 3 / 4 / 5 (P_L) |
+|---|---|---|
+| E1 | baseline, no DD, one batch | 0.046 / 0.261 / 0.339 / 0.425 / 0.435 |
+| E2 no DD | interleaved with DD by round count | 0.049 / 0.253 / 0.325 / 0.389 / 0.440 |
+| E2 DD | `dd=True` | 0.040 / 0.127 / 0.210 / 0.271 / 0.335 |
+| E3 P00 | zero-SWAP control, interleaved | 0.040 / 0.261 / 0.332 / 0.381 / 0.445 |
+| E3 naive | logical i on QB(i+1), routed by `plasma_route` (+54 to +93 CZ) | 0.261 / 0.409 / 0.493 / 0.500 / 0.503 |
+
+- Fits (P < 0.35, bootstrap 95%): no DD pooled 0.102 [0.099, 0.106] over rounds 1-3; DD 0.076 [0.074, 0.079] over rounds 1-5, or 0.065 over rounds 1-3. Without round 1: 0.152 and 0.085.
+- Gate + readout errors from the Garnet snapshot (patch mean CZ 0.62%, readout 1.8%, 1Q 0.09%; T1 38 us, T2 10 us) give a simulated 0.015 per round, so most of the hardware error is idle decoherence during mid-circuit readout, which DD partly removes.
+- The smoke job (20:39 UTC) gave P = 0.166 at 2 rounds versus 0.258 in the 22:05 runs, on the same calibration set: a drift of about 7 sigma over 1.5 h. E4 (repeat E1 a few hours later) will quantify this.
+- Hot spots (bulk detectors, no DD): QB15 (Z) 54%, QB11 (X) 34%, QB5 (Z) 33%, QB9 (X) 28%, QB20 (X) 24%, QB13 (Z) 19%, QB1 (X) 15%, QB7 (Z) 12%. No significant rank correlation with readout error or T2.
+
 ## Data interfaces
 
-- `results/patches.json`: a plain list, one entry per patch: `id`/`name`, `layout` (logical -> physical index), `layout_qb`, `qubits` (17 QB names), `cz_pairs` (24 QB-name pairs). `verification/score_patch.py` reads it directly, but needs a **Garnet** calibration snapshot (the snapshot in `calib/` is from Emerald).
+- `results/patches.json`: a plain list, one entry per patch: `id`/`name`, `layout` (logical -> physical index), `layout_qb`, `qubits` (17 QB names), `cz_pairs` (24 QB-name pairs). `verification/score_patch.py` reads it directly, but and runs on the Garnet snapshots in `calib/` (verified).
 - `results/raw/{config}_r{rounds}_{UTC}_{job}.{json,npz,stim}`: one file set per circuit.
   - `.json`: raw counts (source of truth), layout, transpile stats, verify report, job id, times, calibration set, P.
   - `.npz`: `det_events`, `obs_flips`.
@@ -79,12 +96,11 @@ Dynamical decoupling: `run_batch(..., dd=True)` sends `CircuitCompilationOptions
 
 ## Unknown
 
-- Whether 4-5 round circuits pass the server's duration check (`max_circuit_duration_over_t2`, read in the client source).
-- Shot cap per job, batch size cap, credit budget. The smoke job finished about 4 s after submission, so the queue was empty at that time.
+- Shot and batch caps (5000 shots and 5-circuit batches were accepted; credits are unlimited for the event). Jobs returned within seconds.
 - Whether the Intro Track rubric rewards the zero-SWAP result.
 
 ## Impact on the plan
 
-- **E3 (patch scan) cannot run as planned**: there is only one SWAP-free patch on Garnet. Per the plan change, its budget moves to E4 (drift replicate) and decoder-only experiments on E1 data. Optional: compare P00 with a layout that needs SWAPs.
+- The planned patch scan is impossible (one SWAP-free patch on Garnet); E3 was redefined as the layout-cost comparison above.
 - Patch ranking is moot; the best patch is P00.
-- Next hardware step: E1, rounds 1-5 at 5000 shots as one batch.
+- Remaining hardware step: E4 drift replicate (`python run_experiments.py E4`) a few hours after E1.

@@ -125,12 +125,17 @@ def _drop_global_phase():
     return _drop
 
 
-def layout_pass_manager(layout, n_physical, fuse=True):
-    """PassManager: fixed layout -> CX to CZ -> [merge 1q gates] -> PRX. No routing."""
+def layout_pass_manager(layout, n_physical, fuse=True, route=None):
+    """PassManager: fixed layout -> [SWAP routing] -> CX to CZ -> [merge 1q gates] -> PRX.
+    route: None (no routing; the layout must be an exact embedding) or the connectivity
+    to route on with IQM's plasma_route (used only for the SWAP-cost comparison)."""
     from qrisp import PassManager, combine_single_qubit_gates, convert_to_cz, convert_to_prx
 
     pm = PassManager()
     pm += fixed_layout(layout, n_physical)
+    if route is not None:
+        from iqm.qrisp_iqm import plasma_route
+        pm += plasma_route(route)
     pm += convert_to_cz()
     if fuse:
         pm += combine_single_qubit_gates
@@ -148,12 +153,12 @@ def gate_stats(qc):
             "measure": counts.get("measure", 0), "depth": qc.depth(), "gates": gates}
 
 
-def transpile_qrisp(qc, layout, n_physical, fuse=True):
+def transpile_qrisp(qc, layout, n_physical, fuse=True, route=None):
     """Apply layout_pass_manager and return (qc_t, stats). fuse=True strips annotations
     first and merges adjacent single-qubit gates (about half the depth, same CZs)."""
     if fuse:
         qc = strip_annotations(qc)
-    qc_t = layout_pass_manager(layout, n_physical, fuse).run(qc)
+    qc_t = layout_pass_manager(layout, n_physical, fuse, route).run(qc)
     return qc_t, gate_stats(qc_t)
 
 
