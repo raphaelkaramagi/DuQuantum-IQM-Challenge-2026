@@ -48,6 +48,9 @@ import pymatching
 from qiskit import QuantumCircuit, transpile
 from typing import Optional
 
+from noreset_tools import to_noreset
+from stim_to_qiskit import stim_to_qiskit
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  1.  STIM CIRCUIT GENERATION
@@ -98,10 +101,69 @@ def make_stim_circuit(
 
     Returns
     -------
-    stim.Circuit
+    stim.Circuit   (flattened when no_reset=True). For d=3: 8*rounds detectors,
+                   8*rounds + 9 measurements, 17 qubits used (num_qubits is 26
+                   because Stim indices are sparse), 1 observable.
     """
+    if basis.upper() != "Z":
+        raise NotImplementedError("X basis needs RX/MX support in the converters")
+    n = noise or dict(after_clifford_depolarization=0, after_reset_flip_probability=0,
+                      before_measure_flip_probability=0, before_round_data_depolarization=0)
+    c = stim.Circuit.generated("surface_code:rotated_memory_z", distance=distance, rounds=rounds, **n)
+    return to_noreset(c) if no_reset else c
 
-    return
+
+def build_pair(
+    distance: int = 3,
+    rounds: int = 1,
+    noise: Optional[dict] = None,
+) -> tuple[stim.Circuit, stim.Circuit]:
+    """
+    Returns (hw, twin): the same no-reset Z-memory circuit twice.
+
+    hw   : noiseless. This is what runs on hardware (via to_qiskit_hw) and what
+           extract_syndromes() / m2d conversion should be given.
+    twin : identical circuit with noise channels (default DEFAULT_NOISE).
+           Use it for simulation and for building the DEM / matching graph.
+
+    hw is derived as twin.without_noise(), so both have identical gates,
+    measurement order and detector definitions (Stim formats p=0 and p>0
+    circuits differently, so generating them separately would not be).
+    """
+    twin = make_stim_circuit(distance, rounds, basis="Z", no_reset=True, noise=noise or DEFAULT_NOISE)
+    hw = twin.without_noise()
+    assert hw.get_detector_coordinates() == twin.get_detector_coordinates()
+    assert str(hw.without_noise()) == str(twin.without_noise())
+    return hw, twin
+
+
+def to_qiskit_hw(hw: stim.Circuit) -> tuple[QuantumCircuit, dict, list]:
+    """
+    Converts the hardware circuit from build_pair() into Qiskit.
+
+    Initial R instructions are dropped first: qubits start in |0>, so the
+    detectors stay deterministic without them, and Emerald gets no reset ops.
+    A reset on an already-used qubit raises ValueError (Emerald cannot do it).
+
+    Returns
+    -------
+    qc            : QuantumCircuit, dense qubits 0..16, one clbit per measurement
+                    (clbit i = Stim measurement i)
+    stim_to_dense : dict  stim qubit index -> dense Qiskit index
+    meas_order    : list  stim qubit index of each measurement, in order
+    """
+    stripped, touched = stim.Circuit(), set()
+    for inst in hw.flattened():
+        qubits = [t.value for t in inst.targets_copy() if t.is_qubit_target]
+        if inst.name == "R":
+            late = [q for q in qubits if q in touched]
+            if late:
+                raise ValueError(f"mid-circuit reset on qubits {late}; use the no-reset circuit")
+            continue
+        if inst.name != "QUBIT_COORDS":
+            touched.update(qubits)
+        stripped.append(inst)
+    return stim_to_qiskit(stripped)
 
 def get_circuit_info(circuit: stim.Circuit) -> dict:
     """

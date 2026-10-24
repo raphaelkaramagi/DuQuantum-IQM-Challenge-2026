@@ -186,3 +186,77 @@ For a more substantial extension, the **NVIDIA Ising Predecoder** offers a hardw
 
 The pipeline as set up targets a distance-3 rotated surface code (17 qubits) on a single 5×5 region of Emerald. Several natural extensions exist: running the same code on different 5×5 sub-regions of the chip and comparing logical error rates across regions reveals spatial variation in hardware quality. Trying distance-5 (49 qubits) would require a larger patch but fits on Emerald's full qubit count. Trying the distance-3 code on Garnet also gives you an idea on how a different QPU behaves. 
 
+
+---
+
+## Verification — circuit correctness (Person A)
+
+Core circuit API (`surface_code.py`):
+
+| function | returns |
+|---|---|
+| `make_stim_circuit(distance=3, rounds=1, basis="Z", no_reset=True, noise=None)` | `stim.Circuit`; d=3: `8·rounds` detectors, `8·rounds+9` measurements, 17 qubits (`num_qubits` is 26, sparse indices) |
+| `build_pair(distance, rounds, noise)` | `(hw, twin)`: noiseless hardware circuit + noisy twin, identical gates/detectors |
+| `to_qiskit_hw(hw)` | `(qc, stim_to_dense, meas_order)`: reset-free Qiskit circuit, clbit i = Stim measurement i |
+
+The no-reset rewrite lives in `noreset_tools.to_noreset()` and is tested to agree detector-for-detector with `stim_to_qrisp._analyse()`.
+The negative control (MR→M without rewriting) runs for rounds 2–5 only: at 1 round each ancilla is measured once, so the two circuits are identical.
+
+Run: `python -m pytest verification -q` (latest run, 2026-10-24):
+
+```
+............................................FFFFF                        [100%]
+=========================== short test summary info ============================
+FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[1]
+FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[2]
+FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[3]
+FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[4]
+FAILED verification/test_pipeline.py::test_roundtrip_matches_direct_stim[5]
+PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[1]
+PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[2]
+PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[3]
+PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[4]
+PASSED verification/test_circuit.py::test_noiseless_detectors_and_observable_silent[5]
+PASSED verification/test_circuit.py::test_counts[1]
+PASSED verification/test_circuit.py::test_counts[2]
+PASSED verification/test_circuit.py::test_counts[3]
+PASSED verification/test_circuit.py::test_counts[4]
+PASSED verification/test_circuit.py::test_counts[5]
+PASSED verification/test_circuit.py::test_circuit_level_distance[True-1]
+PASSED verification/test_circuit.py::test_circuit_level_distance[True-2]
+PASSED verification/test_circuit.py::test_circuit_level_distance[True-3]
+PASSED verification/test_circuit.py::test_circuit_level_distance[True-4]
+PASSED verification/test_circuit.py::test_circuit_level_distance[True-5]
+PASSED verification/test_circuit.py::test_circuit_level_distance[False-1]
+PASSED verification/test_circuit.py::test_circuit_level_distance[False-2]
+PASSED verification/test_circuit.py::test_circuit_level_distance[False-3]
+PASSED verification/test_circuit.py::test_circuit_level_distance[False-4]
+PASSED verification/test_circuit.py::test_circuit_level_distance[False-5]
+PASSED verification/test_circuit.py::test_naive_mr_to_m_is_non_deterministic[2]
+PASSED verification/test_circuit.py::test_naive_mr_to_m_is_non_deterministic[3]
+PASSED verification/test_circuit.py::test_naive_mr_to_m_is_non_deterministic[4]
+PASSED verification/test_circuit.py::test_naive_mr_to_m_is_non_deterministic[5]
+PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[1]
+PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[2]
+PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[3]
+PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[4]
+PASSED verification/test_circuit.py::test_no_reset_rewrite_matches_stim_to_qrisp[5]
+PASSED verification/test_circuit.py::test_build_pair_twins_match[1]
+PASSED verification/test_circuit.py::test_build_pair_twins_match[2]
+PASSED verification/test_circuit.py::test_build_pair_twins_match[3]
+PASSED verification/test_circuit.py::test_build_pair_twins_match[4]
+PASSED verification/test_circuit.py::test_build_pair_twins_match[5]
+PASSED verification/test_circuit.py::test_to_qiskit_hw[1]
+PASSED verification/test_circuit.py::test_to_qiskit_hw[2]
+PASSED verification/test_circuit.py::test_to_qiskit_hw[3]
+PASSED verification/test_circuit.py::test_to_qiskit_hw[4]
+PASSED verification/test_circuit.py::test_to_qiskit_hw[5]
+PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[1]
+PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[2]
+PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[3]
+PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[4]
+PASSED verification/test_pipeline.py::test_noiseless_aer_all_silent[5]
+5 failed, 44 passed in 5.90s
+```
+
+The 5 `test_roundtrip_matches_direct_stim` failures are expected until `decode_events` / `decode_ler` (decoder owner) land in the repo.
