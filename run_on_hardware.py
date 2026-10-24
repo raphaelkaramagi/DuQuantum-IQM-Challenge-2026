@@ -27,6 +27,10 @@ from surface_code import DEFAULT_NOISE, make_stim_circuit
 
 SERVER_URL = "https://resonance.iqm.tech"   # alternative to try: https://resonance.meetiqm.com
 RAW_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", "raw")
+RESULTS_CSV = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results", "tables", "results.csv")
+# column order from the implementation plan ("Results table and IDs")
+CSV_COLUMNS = ["timestamp", "config_id", "patch_id", "dd", "opt_level", "dem_variant", "rounds", "shots",
+               "P", "sigma_P", "eps_L", "sigma_eps", "job_id", "notes"]
 
 
 def _now():
@@ -171,6 +175,8 @@ def run_batch(rounds_list, shots, layout, dd=False, backend=None, patch_id="P??"
         }
         base = f"{config_id}_r{rounds}_{submitted:%Y%m%dT%H%M%SZ}_{job_id[:8]}"
         paths = _save(record, det, obs, str(prep["stim"]), base) if save else None
+        if save:
+            append_results_row(record, notes=os.path.basename(paths[0]))
         outs.append({"rounds": rounds, "counts": counts, "det_events": det, "obs_flips": obs, "P": P,
                      "sigma": sigma, "stats": prep["stats"], "verify": prep["verify"], "job_id": job_id,
                      "mean_detector_firing": record["mean_detector_firing"], "paths": paths})
@@ -183,6 +189,43 @@ def run_experiment(rounds, shots, layout, dd=False, backend=None, patch_id="P??"
     {"counts", "det_events", "obs_flips", "P", "sigma", "stats", "verify", "job_id", "paths"}."""
     return run_batch([rounds], shots, layout, dd, backend, patch_id, tag, calib_before, calib_after,
                      save, distance, noise, fuse)[0]
+
+
+def append_results_row(record, notes="", csv_path=RESULTS_CSV):
+    """Append one row per decoded circuit to results/tables/results.csv (append-only).
+    eps_L / sigma_eps are left empty: the multi-round fit is done in decode.py."""
+    import csv
+
+    os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+    new = not os.path.exists(csv_path)
+    row = {"timestamp": record["submitted_utc"], "config_id": record["config_id"], "patch_id": record["patch_id"],
+           "dd": int(record["dd"]), "opt_level": "fuse" if record["stats"].get("fuse") else "nofuse",
+           "dem_variant": "uniform{:g}".format(record["dem_noise"]["after_clifford_depolarization"]),
+           "rounds": record["rounds"], "shots": record["shots"], "P": record["P"], "sigma_P": record["sigma"],
+           "eps_L": "", "sigma_eps": "", "job_id": record["job_id"], "notes": notes}
+    with open(csv_path, "a", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=CSV_COLUMNS)
+        if new:
+            w.writeheader()
+        w.writerow(row)
+
+
+def load_hardware(path):
+    """Load one saved job from any of its three files (.json/.npz/.stim, same stem).
+    Returns (record, det_events, obs_flips, stim_circuit); decode with
+    decode.decode_events(det_events, obs_flips, stim_circuit)."""
+    import stim
+
+    stem = os.path.splitext(path)[0]
+    with open(stem + ".json") as f:
+        record = json.load(f)
+    with np.load(stem + ".npz") as z:
+        det, obs = z["det_events"], z["obs_flips"]
+    with open(stem + ".stim") as f:
+        circuit = stim.Circuit(f.read())
+    assert det.shape[0] == obs.shape[0] == record["shots"], "shot count mismatch"
+    assert det.shape[1] == circuit.num_detectors, "detector count mismatch"
+    return record, det, obs, circuit
 
 
 def _save(record, det, obs, stim_text, base, raw_dir=RAW_DIR):

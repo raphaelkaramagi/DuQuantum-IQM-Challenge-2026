@@ -38,7 +38,7 @@ def qubit_roles():
 
 def main():
     info = json.load(open(os.path.join(ROOT, "results", "backend_info.json")))
-    patch = json.load(open(os.path.join(ROOT, "results", "patches.json")))["patches"][0]
+    patch = json.load(open(os.path.join(ROOT, "results", "patches.json")))[0]
     names, edges = info["qubit_names"], [tuple(e) for e in info["connectivity"]]
     pos = positions()
     assert sorted(pos) == list(range(len(names))), "grid does not cover every qubit"

@@ -18,6 +18,22 @@ SERVERS = ["https://resonance.iqm.tech", "https://resonance.meetiqm.com"]
 OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "results")
 
 
+def patch_rows(patches, pairs, names):
+    """patches.json schema: a plain list, one entry per patch.
+    id/name: patch ID; layout: {logical: physical index}; layout_qb: {logical: QB name};
+    qubits: the 17 QB names; cz_pairs: the 24 interacting pairs as QB names
+    (the format verification/score_patch.py reads)."""
+    qb = (lambda p: names[p]) if names else (lambda p: f"idx{p}")
+    order = lambda s: int(s[2:]) if s[2:].isdigit() else s
+    return [{"id": p["id"], "name": p["id"],
+             "layout": {str(k): int(v) for k, v in sorted(p["layout"].items())},
+             "layout_qb": {str(k): qb(v) for k, v in sorted(p["layout"].items())},
+             "qubits": sorted((qb(v) for v in p["qubits"]), key=order),
+             "cz_pairs": sorted((sorted((qb(p["layout"][a]), qb(p["layout"][b])), key=order) for a, b in pairs),
+                                key=lambda pr: (order(pr[0]), order(pr[1])))}
+            for p in patches]
+
+
 def _clean(msg):
     tok = os.environ.get("IQM_TOKEN", "")
     return str(msg).replace(tok, "***")[:300] if tok else str(msg)[:300]
@@ -48,21 +64,16 @@ def main(device="garnet"):
     pairs = cx_pairs(build_experiment(1).to_qc())
     assert len(pairs) == 24, len(pairs)
     patches = enumerate_patches(pairs, backend.connectivity)
-    qb = (lambda p: names[p]) if names else (lambda p: f"idx{p}")
-    rows = [{"id": p["id"], "layout": {str(k): int(v) for k, v in sorted(p["layout"].items())},
-             "layout_qb": {str(k): qb(v) for k, v in sorted(p["layout"].items())},
-             "qubits_qb": sorted((qb(v) for v in p["qubits"]), key=lambda s: int(s[2:]) if s[2:].isdigit() else s)}
-            for p in patches]
+    rows = patch_rows(patches, pairs, names)
     with open(os.path.join(OUT, "patches.json"), "w") as f:
-        json.dump({"device": device, "server_url": info["server_url"], "timestamp_utc": info["timestamp_utc"],
-                   "n_patches": len(rows), "patches": rows}, f, indent=1)
+        json.dump(rows, f, indent=1)
     print(f"\nZERO-SWAP PATCHES: {len(patches)}   (written to results/patches.json)")
     if not patches:
         print("STOP: no zero-SWAP embedding. Fallback = plasma_layout + plasma_route; tell the team.")
         return
 
     for p in rows:
-        print(p["id"], p["qubits_qb"])
+        print(p["id"], p["qubits"])
     print("\nverify_layout on", patches[0]["id"], "(offline, nothing submitted):")
     for r in range(1, 6):
         rep = prepare(r, patches[0]["layout"], backend.connectivity)["verify"]
