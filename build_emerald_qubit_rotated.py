@@ -80,6 +80,8 @@ def print_qubit_map(
     qiskit_offset: int = -1,
 ):
     """
+    DEPRECATED: broken (calls build_emerald_qubit_map with 7 args, it takes 1). Use layout.verify_layout instead.
+
     NOTE: If you are using qiskit, the mapping is easily compared by hand, since the expected Qiskit and Resonance qubit indices are the same (except for a -1 difference).
 
 
@@ -102,6 +104,7 @@ def print_qubit_map(
                      Default -1 (QB1 -> 0, QB17 -> 16, QB45 -> 44).
                      Set to 0 to return raw Resonance QB numbers instead.
     """
+    raise NotImplementedError("print_qubit_map is deprecated; use layout.verify_layout")
     coords        = stim_circuit.get_final_qubit_coordinates()
     data_q, anc_q = get_qubit_lists(stim_circuit)
     qubit_map     = build_emerald_qubit_map(

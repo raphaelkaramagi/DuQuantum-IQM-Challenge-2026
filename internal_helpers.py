@@ -51,9 +51,6 @@ def get_qubit_lists(circuit: stim.Circuit) -> tuple[list, list]:
     return data_q, anc_q
 
 
-    return data_q, anc_q
-
-
 def get_meas_order(circuit: stim.Circuit) -> list:
     """Returns list of Stim qubit indices in measurement order."""
     order = []

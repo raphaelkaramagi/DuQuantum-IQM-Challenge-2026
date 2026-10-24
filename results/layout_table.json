@@ -1,0 +1,187 @@
+{
+ "patch_id": "P00",
+ "calibration_set_id": "a18a947f-0408-4628-81ea-1715637e434f",
+ "n_cz_pairs_on_edges": 24,
+ "qubits": [
+  {
+   "physical": 0,
+   "qb": "QB1",
+   "logical": 1,
+   "stim": 2,
+   "role": "X",
+   "row": 0,
+   "col": 1
+  },
+  {
+   "physical": 1,
+   "qb": "QB2",
+   "logical": 0,
+   "stim": 1,
+   "role": "data",
+   "row": 0,
+   "col": 2
+  },
+  {
+   "physical": 2,
+   "qb": "QB3",
+   "logical": null,
+   "stim": null,
+   "role": null,
+   "row": 1,
+   "col": 0
+  },
+  {
+   "physical": 3,
+   "qb": "QB4",
+   "logical": 2,
+   "stim": 3,
+   "role": "data",
+   "row": 1,
+   "col": 1
+  },
+  {
+   "physical": 4,
+   "qb": "QB5",
+   "logical": 5,
+   "stim": 9,
+   "role": "Z",
+   "row": 1,
+   "col": 2
+  },
+  {
+   "physical": 5,
+   "qb": "QB6",
+   "logical": 4,
+   "stim": 8,
+   "role": "data",
+   "row": 1,
+   "col": 3
+  },
+  {
+   "physical": 6,
+   "qb": "QB7",
+   "logical": 10,
+   "stim": 14,
+   "role": "Z",
+   "row": 1,
+   "col": 4
+  },
+  {
+   "physical": 7,
+   "qb": "QB8",
+   "logical": 3,
+   "stim": 5,
+   "role": "data",
+   "row": 2,
+   "col": 0
+  },
+  {
+   "physical": 8,
+   "qb": "QB9",
+   "logical": 7,
+   "stim": 11,
+   "role": "X",
+   "row": 2,
+   "col": 1
+  },
+  {
+   "physical": 9,
+   "qb": "QB10",
+   "logical": 6,
+   "stim": 10,
+   "role": "data",
+   "row": 2,
+   "col": 2
+  },
+  {
+   "physical": 10,
+   "qb": "QB11",
+   "logical": 12,
+   "stim": 16,
+   "role": "X",
+   "row": 2,
+   "col": 3
+  },
+  {
+   "physical": 11,
+   "qb": "QB12",
+   "logical": 11,
+   "stim": 15,
+   "role": "data",
+   "row": 2,
+   "col": 4
+  },
+  {
+   "physical": 12,
+   "qb": "QB13",
+   "logical": 9,
+   "stim": 13,
+   "role": "Z",
+   "row": 3,
+   "col": 0
+  },
+  {
+   "physical": 13,
+   "qb": "QB14",
+   "logical": 8,
+   "stim": 12,
+   "role": "data",
+   "row": 3,
+   "col": 1
+  },
+  {
+   "physical": 14,
+   "qb": "QB15",
+   "logical": 14,
+   "stim": 18,
+   "role": "Z",
+   "row": 3,
+   "col": 2
+  },
+  {
+   "physical": 15,
+   "qb": "QB16",
+   "logical": 13,
+   "stim": 17,
+   "role": "data",
+   "row": 3,
+   "col": 3
+  },
+  {
+   "physical": 16,
+   "qb": "QB17",
+   "logical": null,
+   "stim": null,
+   "role": null,
+   "row": 3,
+   "col": 4
+  },
+  {
+   "physical": 17,
+   "qb": "QB18",
+   "logical": null,
+   "stim": null,
+   "role": null,
+   "row": 4,
+   "col": 1
+  },
+  {
+   "physical": 18,
+   "qb": "QB19",
+   "logical": 15,
+   "stim": 19,
+   "role": "data",
+   "row": 4,
+   "col": 2
+  },
+  {
+   "physical": 19,
+   "qb": "QB20",
+   "logical": 16,
+   "stim": 25,
+   "role": "X",
+   "row": 4,
+   "col": 3
+  }
+ ]
+}

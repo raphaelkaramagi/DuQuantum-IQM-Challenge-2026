@@ -189,7 +189,7 @@ The pipeline as set up targets a distance-3 rotated surface code (17 qubits) on 
 
 ---
 
-## Verification — circuit correctness (Person A)
+## Verification — circuit correctness
 
 Core circuit API (`surface_code.py`):
 

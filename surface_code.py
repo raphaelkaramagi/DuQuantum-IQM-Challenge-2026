@@ -67,8 +67,8 @@ DEFAULT_NOISE = dict(
 
 
 def make_stim_circuit(
-    distance: int,
-    rounds: int,
+    distance: int = 3,
+    rounds: int = 1,
     basis: str = "Z",
     no_reset: bool = True,
     noise: Optional[dict] = None,
