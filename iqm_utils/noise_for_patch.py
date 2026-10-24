@@ -74,7 +74,7 @@ def noise_for_patch(
             order is preserved because the saved calibration is directed.
         calib: D1's ``calibration_data`` mapping, full snapshot mapping, or its
             JSON path.
-        p_idle: Optional trial value from C's sweep. If absent, idle noise stays
+        p_idle: Optional trial value from the decoder prior sweep. If absent, idle noise stays
             unset because duration data is not available.
 
     Returns:

@@ -27,11 +27,10 @@ Where the other stages live
 ---------------------------
   1. Circuit generation              this file
   2. Stim → Qiskit / Qrisp           stim_to_qiskit.py, stim_to_qrisp.py
-  3. OPTIONAL Emerald qubit mapping  build_emerald_qubit_rotated.py  (only needed for Qiskit)
-  4. Simulation                      TBD (section 4 below)
-  5. Hardware execution              run_on_hardware.py: run_qiskit() / run_qrisp()
-  6. Syndromes → Decoder             extract_syndromes.py (only needed for Qiskit),
-                                     run_on_hardware.py: decode_hardware_results()
+  3. Zero-SWAP qubit layout          layout.py
+  4. Simulation, decoding, fit       decode.py
+  5. Hardware execution              run_on_hardware.py: run_batch() / run_experiment()
+  6. Syndromes → Decoder             extract_syndromes.py (only needed for Qiskit), decode.py
   Helpers                            internal_helpers.py
 
 Usage

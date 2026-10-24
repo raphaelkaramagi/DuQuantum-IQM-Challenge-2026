@@ -1,13 +1,10 @@
-"""End-to-end pipeline tests (Task 5): Qiskit/Aer -> counts -> syndromes -> decoder.
+"""End-to-end pipeline tests (Qiskit fallback path): Qiskit/Aer -> counts -> syndromes -> decoder.
 
-Collaborator APIs used here
----------------------------
-B : counts_to_measurement_array(counts, num_measurements, total_shots) -> (shots, n_meas) bool
-    (currently in internal_helpers.py)
-C : decode_events(det_events, obs_flips, circuit) -> P  or (P, stderr)
-    decode_ler(circuit, shots)                    -> P  or (P, stderr)
-    ASSUMED signatures, not yet in the repo. C: if yours differ, adjust the two
-    calls in test_roundtrip_matches_direct_stim (and add your module to TEAM_MODULES).
+APIs used here
+--------------
+internal_helpers.counts_to_measurement_array(counts, num_measurements, total_shots) -> (shots, n_meas) bool
+decode.decode_events(det_events, obs_flips, circuit) -> (P, stderr)
+decode.decode_ler(circuit, shots)                    -> (P, stderr)
 """
 import importlib
 from collections import Counter

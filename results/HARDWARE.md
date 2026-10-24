@@ -1,4 +1,4 @@
-# Hardware and layout (Person B)
+# Hardware and layout
 
 Status as of Sat Oct 24, ~5:15 PM ET. Labels: **verified** = we ran it, **read** = from code or docs, **unknown** = not checked yet.
 
@@ -46,7 +46,7 @@ One job, two circuits (rounds 1 and 2), 1000 shots each, patch P00, no DD, fused
 - **Garnet accepts repeated measurement of the same qubit without reset**: the round-2 circuit measures every ancilla twice and ran without error.
 - Counts sum to 1000 for both circuits. The events in the `.npz` files were re-derived from the raw counts with a fresh trace and match exactly, as does the saved Stim circuit. `decode.decode_events` on the saved files gives the same P.
 - A two-point fit (`decode.fit_eps`, rounds 1-2) gives eps_L of about 0.057 per round. This is indicative only; it needs rounds 1-5 and the P < 0.35 rule.
-- Round-2 firing is highest on bulk detectors, peaking at 38.8%. Without reset, each bulk detector combines measurements two rounds apart, so ancilla idling and readout errors count twice. This is a hypothesis for D's hot-spot map, not a finding yet.
+- Round-2 firing is highest on bulk detectors, peaking at 38.8%. Without reset, each bulk detector combines measurements two rounds apart, so ancilla idling and readout errors count twice. This is a hypothesis for the hot-spot map, not a finding yet.
 
 ## Data interfaces
 
@@ -57,7 +57,7 @@ One job, two circuits (rounds 1 and 2), 1000 shots each, patch P00, no DD, fused
   - `.stim`: the circuit whose DEM decodes it.
 - `run_on_hardware.load_hardware(path) -> (record, det_events, obs_flips, stim_circuit)` loads one set; then `decode.decode_events(det_events, obs_flips, stim_circuit)`. Note: `decode.load_raw` expects the older Qiskit `raw_meas` format and does not read these files.
 - `results/tables/results.csv`: one row appended per circuit by `run_batch`, columns from the plan. `eps_L` is left empty for the fit in `decode.py`.
-- `results/verification_results.pdf`: Person A's verification report (moved from `verification/` so all outputs live under `results/`).
+- `results/verification_results.pdf`: the circuit verification report (moved from `verification/` so all outputs live under `results/`).
 
 ## How to run (token comes from `IQM_TOKEN` or `.env`, never committed)
 
@@ -86,5 +86,5 @@ Dynamical decoupling: `run_batch(..., dd=True)` sends `CircuitCompilationOptions
 ## Impact on the plan
 
 - **E3 (patch scan) cannot run as planned**: there is only one SWAP-free patch on Garnet. Per the plan change, its budget moves to E4 (drift replicate) and decoder-only experiments on E1 data. Optional: compare P00 with a layout that needs SWAPs.
-- Patch ranking (D2) is moot; P* = P00.
+- Patch ranking is moot; the best patch is P00.
 - Next hardware step: E1, rounds 1-5 at 5000 shots as one batch.

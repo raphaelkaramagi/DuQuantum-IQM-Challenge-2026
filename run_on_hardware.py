@@ -115,7 +115,7 @@ def counts_to_events(counts, post, shots, n_clbits):
 
 
 def decode_inline(stim_circuit, det_events, obs_flips):
-    """PyMatching with the experiment's own DEM. Replace with C's decode_events when it lands."""
+    """PyMatching with the experiment's own DEM (same result as decode.decode_events)."""
     import pymatching
 
     dem = stim_circuit.detector_error_model(decompose_errors=True)

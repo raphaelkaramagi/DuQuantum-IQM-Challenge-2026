@@ -5,7 +5,7 @@ a list of objects with ``name``, 17 ``qubits``, and 24 ``cz_pairs``.  This ranks
 calibration-derived proxies only; validate the hypothesis with the patch scan.
 
 Example:
-    python score_patch.py calib/SNAPSHOT.json patches.json --output patch_ranking.json
+    python verification/score_patch.py calib/SNAPSHOT.json results/patches.json --output patch_ranking.json
 """
 
 from __future__ import annotations
@@ -195,7 +195,7 @@ def select_representatives(ranking: Sequence[PatchScore]) -> dict[str, PatchScor
 
 
 def load_patches(path: str | Path) -> list[Patch]:
-    """Load B's JSON: [{"name": ..., "qubits": [...], "cz_pairs": [[...], ...]}]."""
+    """Load results/patches.json: [{"name": ..., "qubits": [...], "cz_pairs": [[...], ...]}]."""
     with Path(path).open(encoding="utf-8") as source:
         entries = json.load(source)
     return [
@@ -217,7 +217,7 @@ def load_snapshot(path: str | Path) -> Mapping[str, Mapping[str, float]]:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("snapshot", type=Path, help="D1 calibration snapshot JSON")
-    parser.add_argument("patches", type=Path, help="B's patch-definition JSON")
+    parser.add_argument("patches", type=Path, help="patch-definition JSON (results/patches.json)")
     parser.add_argument("--output", type=Path, default=Path("patch_ranking.json"))
     arguments = parser.parse_args()
 

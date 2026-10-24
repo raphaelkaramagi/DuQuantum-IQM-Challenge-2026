@@ -10,6 +10,5 @@ info.txt
 # Local simulation outputs
 /results/simulation/
 
-# Local notes (not shared)
 CLAUDE.md
 guide.md

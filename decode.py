@@ -136,7 +136,7 @@ def run_simulation_baseline(shots=20000):
     Path("figures").mkdir(parents=True, exist_ok=True)
 
     for r in rounds:
-        # Generate Person A's no-reset circuit
+        # Generate the no-reset circuit
         hw, twin = build_pair(distance=3, rounds=int(r))
 
         # Sample raw measurement records
