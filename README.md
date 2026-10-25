@@ -16,10 +16,11 @@ flowchart LR
 
 | | |
 |---|---|
-| Device | IQM Garnet (20 qubits, 30 CZ couplers), calibration set `a18a947f`, Oct 24 2026, 22:05–22:14 UTC |
+| Device | IQM Garnet (20 qubits, 30 CZ couplers); calibration set `a18a947f` (Oct 24, 22:05–22:14 UTC) and `0fe32137` (E4, Oct 25, 12:20 UTC) |
 | Layout | The only zero-SWAP placement on Garnet (patch P00); exactly 24 CZ per round, every CZ on a hardware coupler |
 | Logical error per round, no DD | **ε_L = 0.102 ± 0.001** (bootstrap 95% CI [0.099, 0.106]), rounds 1–3, 15,000 shots each |
 | Logical error per round, with DD | **ε_L = 0.076 ± 0.001** ([0.074, 0.079]), rounds 1–5, 5,000 shots each |
+| Drift replicate next day, no DD (E4) | ε_L = 0.070 ± 0.002 ([0.064, 0.075]), rounds 1–3, new calibration set |
 | Main limit on ε_L | Gate and readout errors alone predict ε_L ≈ 0.015; the remaining gap is consistent with unmodeled idling and other device effects |
 
 ### Hardware data (decoded logical-error probability P_L)
@@ -29,6 +30,7 @@ flowchart LR
 | Zero-SWAP P00, no DD (E1+E2+E3 pooled, 15k shots) | 0.045 | 0.258 | 0.332 | 0.398 | 0.440 |
 | Zero-SWAP P00, DD on (E2, 5k shots) | 0.040 | 0.127 | 0.210 | 0.271 | 0.335 |
 | Naive layout + SWAP routing (E3, 5k shots) | 0.261 | 0.409 | 0.493 | 0.500 | 0.503 |
+| Zero-SWAP P00, no DD, next day (E4, 5k shots) | 0.026 | 0.180 | 0.283 | 0.353 | 0.401 |
 | Stim, Garnet gate + readout errors, no idling | 0.030 | 0.037 | 0.044 | 0.055 | 0.061 |
 | Stim, uniform 0.3% | 0.002 | 0.005 | 0.006 | 0.008 | 0.010 |
 
@@ -48,6 +50,10 @@ DD-on and DD-off circuits were interleaved by round count in E2, so each compari
 
 DD lowers decoded logical-error probability at all five round counts and exceeds the pre-specified two-standard-error threshold at all five. This meets the D7 criterion for a detectable DD effect. See `figures/dd_comparison.png`.
 
+### Drift: E4 replicate on the next day's calibration
+
+E4 repeated E1 about 14 hours later, after IQM recalibrated Garnet (`0fe32137`). P_L was lower at every round count (by 0.019, 0.078, 0.049, 0.045, 0.039; z = 4.9–12.0), and ε_L fell from 0.102 to 0.070. Patch-averaged calibration moved in mixed directions: CZ error rose from 0.62% to 1.25%, while readout error fell from 1.76% to 1.15% and T2 rose from 9.9 to 11.6 µs. The logical error rate improved despite worse CZ gates, which is consistent with readout and idling, rather than CZ error, dominating; with two calibration sets this is descriptive. See `results/tables/drift.csv`.
+
 ### Calibration-informed error-budget proxy
 
 The P00 calibration snapshot was applied to the exact no-reset Stim circuit at its physical CZ pairs and qubits, then each modeled channel was independently set to zero. The calibrated baseline gives ε_L = 0.0121, only 0.118× the no-DD hardware estimate (0.1023), so calibrated gate/readout noise alone does not reproduce hardware within a factor of two. The independent ε_L drops are 0.00954 for CZ, 0.00552 for readout, and 0.00386 for single-qubit noise. These drops are not additive. Idle noise is not included or ablated because the calibration data does not provide the required gate or measurement durations. See `figures/error_budget_proxy.png` and `results/tables/error_budget_proxy.json`.
@@ -66,7 +72,7 @@ The P00 calibration snapshot was applied to the exact no-reset Stim circuit at i
 
 ### Limitations
 
-- One calibration set and one session (about ten minutes). A drift replicate several hours later (E4) has not been run.
+- Two calibration sets only (one session of about ten minutes, plus the E4 replicate the next day); drift between them is large, so ε_L should be read as specific to a calibration set.
 - Only one zero-SWAP patch exists on Garnet, so the planned patch-quality scan was replaced by the E3 layout-cost comparison.
 - The calibrated simulation omits idle noise because gate and readout durations were unavailable.
 - The default decoder prior is uniform 0.3%; a calibration-weighted decoder was not applied to hardware data.
@@ -82,11 +88,11 @@ python -m pytest verification -q          # verification, no hardware
 python dryrun.py                           # noiseless run through IQM's converter, no hardware
 python analyze_hardware.py                 # re-decode results/raw/, fits, tables, figures
 python iqm_utils/d_analysis.py             # paired DD comparison and hotspot artifacts
-python iqm_utils/reconcile_run_registry.py # reconstruct D4 statuses; E4 is explicitly skipped
+python iqm_utils/reconcile_run_registry.py # run-status registry from saved results
 python run_d6_error_budget.py              # calibrated, non-idle D6 proxy and error-budget figure
 # hardware (needs IQM_TOKEN in the environment or .env):
 python hw_setup.py garnet                  # backend facts and patch search, submits nothing
-python run_experiments.py E1 E2 E3         # run matrix; E4 = drift replicate
+python run_experiments.py E1 E2 E3 E4      # run matrix (E4 = drift replicate)
 ```
 
 ### Code map

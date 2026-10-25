@@ -59,10 +59,11 @@ One job, two circuits (rounds 1 and 2), 1000 shots each, patch P00, no DD, fused
 | E2 DD | `dd=True` | 0.040 / 0.127 / 0.210 / 0.271 / 0.335 |
 | E3 P00 | zero-SWAP control, interleaved | 0.040 / 0.261 / 0.332 / 0.381 / 0.445 |
 | E3 naive | logical i on QB(i+1), routed by `plasma_route` (+54 to +93 CZ) | 0.261 / 0.409 / 0.493 / 0.500 / 0.503 |
+| E4 | E1 repeated Oct 25 12:20 UTC, calibration set `0fe32137` | 0.026 / 0.180 / 0.283 / 0.353 / 0.401 |
 
 - Fits (P < 0.35, bootstrap 95%): no DD pooled 0.102 [0.099, 0.106] over rounds 1-3; DD 0.076 [0.074, 0.079] over rounds 1-5, or 0.065 over rounds 1-3. Without round 1: 0.152 and 0.085.
 - Gate + readout errors from the Garnet snapshot (patch mean CZ 0.62%, readout 1.8%, 1Q 0.09%; T1 38 us, T2 10 us) give a simulated 0.015 per round, so most of the hardware error is idle decoherence during mid-circuit readout, which DD partly removes.
-- The smoke job (20:39 UTC) gave P = 0.166 at 2 rounds versus 0.258 in the 22:05 runs, on the same calibration set: a drift of about 7 sigma over 1.5 h. E4 (repeat E1 a few hours later) will quantify this.
+- The smoke job (20:39 UTC) gave P = 0.166 at 2 rounds versus 0.258 in the 22:05 runs, on the same calibration set: a drift of about 7 sigma over 1.5 h. E4 (next day, new calibration set) gave eps_L 0.070 vs 0.102, lower at every round count (z 4.9-12.0; `results/tables/drift.csv`).
 - Hot spots (bulk detectors, no DD): QB15 (Z) 54%, QB11 (X) 34%, QB5 (Z) 33%, QB9 (X) 28%, QB20 (X) 24%, QB13 (Z) 19%, QB1 (X) 15%, QB7 (Z) 12%. No significant rank correlation with readout error or T2.
 
 ## Data interfaces
@@ -103,4 +104,4 @@ Dynamical decoupling: `run_batch(..., dd=True)` sends `CircuitCompilationOptions
 
 - The planned patch scan is impossible (one SWAP-free patch on Garnet); E3 was redefined as the layout-cost comparison above.
 - Patch ranking is moot; the best patch is P00.
-- Remaining hardware step: E4 drift replicate (`python run_experiments.py E4`) a few hours after E1.
+- All planned hardware experiments (E1-E4) are done.

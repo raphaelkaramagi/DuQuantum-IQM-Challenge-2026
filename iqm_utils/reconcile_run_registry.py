@@ -1,7 +1,7 @@
 """Rebuild D4's run-status registry from immutable saved experiment logs.
 
-The registry is descriptive: it records completed E1--E3 circuit submissions
-and marks E4 skipped because no new hardware jobs are authorized in this run.
+The registry is descriptive: it records every completed E1--E4 circuit submission
+and marks E4 skipped only if no E4 results exist.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ def completed_rows() -> list[dict[str, str | int]]:
     records = [record for record in records if record["config_id"] != "P00-nodd-smoke"]
     for sequence, record in enumerate(records, start=1):
         config = record["config_id"]
-        experiment = "E1" if config.endswith("E1") else "E2" if "E2" in config else "E3"
+        experiment = config.rsplit("-", 1)[-1][:2]   # "...-E1", "...-E2dd", "...-E3", "...-E4"
         rows.append({
             "run_id": f"{experiment}-{config}-r{record['rounds']}",
             "experiment": experiment,
@@ -59,13 +59,14 @@ def skipped_e4_rows(sequence: int) -> list[dict[str, str | int]]:
 
 def main() -> None:
     rows = completed_rows()
-    rows.extend(skipped_e4_rows(len(rows) + 1))
+    if not any(row["experiment"] == "E4" for row in rows):
+        rows.extend(skipped_e4_rows(len(rows) + 1))
     with OUTPUT.open("w", newline="", encoding="utf-8") as destination:
         writer = csv.DictWriter(destination, fieldnames=FIELDS)
         writer.writeheader()
         writer.writerows(rows)
     done = sum(row["status"] == "done" for row in rows)
-    print(f"Wrote {OUTPUT.relative_to(ROOT)}: {done} done, 5 E4 rows skipped.")
+    print(f"Wrote {OUTPUT.relative_to(ROOT)}: {done} done, {len(rows) - done} skipped.")
 
 
 if __name__ == "__main__":

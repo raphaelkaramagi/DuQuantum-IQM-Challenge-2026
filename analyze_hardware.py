@@ -42,6 +42,7 @@ ARMS = {
     "E1 only": ["P00-nodd-E1"],
     "E2 no DD only": ["P00-nodd-E2nodd"],
     "E3 zero-SWAP only": ["P00-nodd-E3"],
+    "E4 drift replicate, no DD (next day)": ["P00-nodd-E4"],
 }
 
 
@@ -172,6 +173,21 @@ def main():
                      "sigma_eps": summary_sim[1], "boot_lo": "", "boot_hi": ""})
     write_csv(os.path.join(TABLES, "hardware_fits.csv"), fits)
 
+    # Drift: E4 (next day, new calibration set) against the pooled no-DD session
+    if "P00-nodd-E4" in data:
+        e4_rec = data["P00-nodd-E4"][1][0][0]
+        _, e4_cal = calibration_noise(os.path.join(ROOT, e4_rec["calib_before"]), patch["qubits"], patch["cz_pairs"])
+        print("E4 calibration set", e4_rec["backend"]["calibration_set_id"][:8], "(patch mean):",
+              {k: round(v, 5) for k, v in e4_cal.items()})
+        base, e4 = curves["no DD (E1+E2+E3, pooled)"], curves["E4 drift replicate, no DD (next day)"]
+        drift = []
+        for r in rounds:
+            a, b = base[r].mean(), e4[r].mean()
+            se = np.sqrt(a * (1 - a) / len(base[r]) + b * (1 - b) / len(e4[r]))
+            drift.append({"rounds": r, "P_session1": a, "P_E4": b, "delta": b - a, "z": (b - a) / se})
+        write_csv(os.path.join(TABLES, "drift.csv"), drift)
+        print("drift E4 - session 1:", " ".join(f"r{d['rounds']}={d['delta']:+.3f}(z={d['z']:.1f})" for d in drift))
+
     hs = hotspots(data, table, snapshot)
     write_csv(os.path.join(TABLES, "hotspots.csv"), hs)
     rho_ro = spearmanr([h["bulk_firing"] for h in hs], [h["readout_error"] for h in hs])
@@ -185,7 +201,8 @@ def main():
         print(f"{f['arm']:45s} {f['fit']:28s} r={f['rounds']:10s} eps_L={f['eps_L']:.4f} +- {f['sigma_eps']:.4f} {lo}")
 
     # Figure: P_L vs rounds and logical fidelity, hardware vs simulation
-    style = {"no DD (E1+E2+E3, pooled)": ("C0", "o"), "DD (E2)": ("C2", "s")}
+    style = {"no DD (E1+E2+E3, pooled)": ("C0", "o"), "DD (E2)": ("C2", "s"),
+             "E4 drift replicate, no DD (next day)": ("C1", "^")}
     fig, ax = plt.subplots(1, 2, figsize=(11, 4.2))
     rf = np.linspace(1, 5, 100)
     for arm, (col, mk) in style.items():
