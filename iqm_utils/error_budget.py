@@ -120,7 +120,7 @@ def plot_error_budget(report: Mapping[str, Any], output_path: str | Path) -> Pat
     """Write the D6 horizontal ablation chart (positive means worse with channel)."""
     import matplotlib.pyplot as plt
 
-    labels = list(CHANNELS)
+    labels = list(report["ablations"])
     drops = [report["ablations"][channel]["eps_L_drop"] for channel in labels]
     figure, axis = plt.subplots(figsize=(7, 4))
     bars = axis.barh(labels, drops, color="#8b5cf6")

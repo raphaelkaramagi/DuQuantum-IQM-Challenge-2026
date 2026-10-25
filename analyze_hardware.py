@@ -93,8 +93,10 @@ def calibration_noise(snapshot, layout_qubits, cz_pairs):
                    "t2_us": np.mean([cal["t2"][q] for q in layout_qubits])}
 
 
-def simulate(noise, rounds, shots=20000):
-    return {r: decode_ler(make_stim_circuit(3, r, no_reset=True, noise=noise), shots)[0] for r in rounds}
+def simulate(noise, rounds, shots=20000, seed=20261024):
+    """Run reproducible simulation overlays, using a distinct fixed seed per round."""
+    return {r: decode_ler(make_stim_circuit(3, r, no_reset=True, noise=noise), shots, seed=seed + r)[0]
+            for r in rounds}
 
 
 def hotspots(data, table, snapshot):

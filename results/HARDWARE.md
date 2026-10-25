@@ -92,7 +92,7 @@ layout = {int(k): v for k, v in p["layout"].items()}
 outs = run_batch([1, 2, 3, 4, 5], 5000, layout, dd=False, backend=connect(), patch_id=p["id"], tag="E1")
 ```
 
-Dynamical decoupling: `run_batch(..., dd=True)` sends `CircuitCompilationOptions(dd_mode=DDMode.ENABLED)` with IQM's default strategy (read). Whether it changes anything on hardware is **unknown**.
+Dynamical decoupling: `run_batch(..., dd=True)` sends `CircuitCompilationOptions(dd_mode=DDMode.ENABLED)` with IQM's default strategy. In interleaved E2 hardware data, DD lowered P_L at all rounds; the paired DD-minus-no-DD differences are -0.009, -0.126, -0.116, -0.118, and -0.105 for rounds 1-5, respectively. See `results/tables/dd_comparison.csv`.
 
 ## Unknown
 

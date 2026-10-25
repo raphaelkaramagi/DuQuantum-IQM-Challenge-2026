@@ -1,0 +1,5 @@
+metric,spearman_rho,two_sided_p_value,n_ancillas,interpretation
+readout_error,0.11904761904761905,0.7788857260523796,8,Descriptive only; eight ancillas are insufficient for an inferential physical-noise claim.
+mean_cz_error,0.3333333333333334,0.41975308641975323,8,Descriptive only; eight ancillas are insufficient for an inferential physical-noise claim.
+t1_us,-0.2142857142857143,0.6103444156452668,8,Descriptive only; eight ancillas are insufficient for an inferential physical-noise claim.
+t2_us,-0.14285714285714288,0.7357648598798119,8,Descriptive only; eight ancillas are insufficient for an inferential physical-noise claim.

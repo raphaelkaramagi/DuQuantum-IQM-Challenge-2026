@@ -1,0 +1,31 @@
+run_id,experiment,config_id,patch_id,rounds,shots,dd,sequence,status,job_id,notes
+E1-P00-nodd-E1-r1,E1,P00-nodd-E1,P00,1,5000,0,1,done,01a16ff2-47a9-70b5-829d-3889267a35a0,Reconciled from results.csv; raw data retained under results/raw/.
+E1-P00-nodd-E1-r2,E1,P00-nodd-E1,P00,2,5000,0,2,done,01a16ff2-47a9-70b5-829d-3889267a35a0,Reconciled from results.csv; raw data retained under results/raw/.
+E1-P00-nodd-E1-r3,E1,P00-nodd-E1,P00,3,5000,0,3,done,01a16ff2-47a9-70b5-829d-3889267a35a0,Reconciled from results.csv; raw data retained under results/raw/.
+E1-P00-nodd-E1-r4,E1,P00-nodd-E1,P00,4,5000,0,4,done,01a16ff2-47a9-70b5-829d-3889267a35a0,Reconciled from results.csv; raw data retained under results/raw/.
+E1-P00-nodd-E1-r5,E1,P00-nodd-E1,P00,5,5000,0,5,done,01a16ff2-47a9-70b5-829d-3889267a35a0,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-nodd-E2nodd-r1,E2,P00-nodd-E2nodd,P00,1,5000,0,6,done,01a16ff3-395a-7640-8493-922854ab36a0,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-dd-E2dd-r1,E2,P00-dd-E2dd,P00,1,5000,1,7,done,01a16ff3-559a-76ad-8c00-98ad878f92b0,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-nodd-E2nodd-r2,E2,P00-nodd-E2nodd,P00,2,5000,0,8,done,01a16ff3-79b2-7414-b849-42e059bc2cb4,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-dd-E2dd-r2,E2,P00-dd-E2dd,P00,2,5000,1,9,done,01a16ff3-9825-7709-9ef1-43e94e408eac,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-nodd-E2nodd-r3,E2,P00-nodd-E2nodd,P00,3,5000,0,10,done,01a16ff3-beb0-774c-9ac4-ac7659290ec9,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-dd-E2dd-r3,E2,P00-dd-E2dd,P00,3,5000,1,11,done,01a16ff3-e66c-770c-bcfa-7975bbd8d818,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-nodd-E2nodd-r4,E2,P00-nodd-E2nodd,P00,4,5000,0,12,done,01a16ff4-1454-77db-873d-d886b50790aa,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-dd-E2dd-r4,E2,P00-dd-E2dd,P00,4,5000,1,13,done,01a16ff4-3e91-703e-984a-9cb642ff3838,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-nodd-E2nodd-r5,E2,P00-nodd-E2nodd,P00,5,5000,0,14,done,01a16ff4-6fdd-7261-9995-deb9e7de6914,Reconciled from results.csv; raw data retained under results/raw/.
+E2-P00-dd-E2dd-r5,E2,P00-dd-E2dd,P00,5,5000,1,15,done,01a16ff4-9ef8-7703-94a4-b1079f0b7641,Reconciled from results.csv; raw data retained under results/raw/.
+E3-P00-nodd-E3-r1,E3,P00-nodd-E3,P00,1,5000,0,16,done,01a16ff9-0fe2-77b4-a8ac-bf1becfe81ff,Reconciled from results.csv; raw data retained under results/raw/.
+E3-NAIVE-nodd-E3-r1,E3,NAIVE-nodd-E3,NAIVE,1,5000,0,17,done,01a16ff9-29b5-70b1-aca0-ddd16347ce0e,Reconciled from results.csv; raw data retained under results/raw/.
+E3-P00-nodd-E3-r2,E3,P00-nodd-E3,P00,2,5000,0,18,done,01a16ff9-51e5-7476-af18-d56b9420e1ab,Reconciled from results.csv; raw data retained under results/raw/.
+E3-NAIVE-nodd-E3-r2,E3,NAIVE-nodd-E3,NAIVE,2,5000,0,19,done,01a16ff9-703b-757a-8728-e91ca2432f23,Reconciled from results.csv; raw data retained under results/raw/.
+E3-P00-nodd-E3-r3,E3,P00-nodd-E3,P00,3,5000,0,20,done,01a16ff9-97bb-721e-ba70-30accedc5a60,Reconciled from results.csv; raw data retained under results/raw/.
+E3-NAIVE-nodd-E3-r3,E3,NAIVE-nodd-E3,NAIVE,3,5000,0,21,done,01a16ff9-bb8b-771f-a4f2-3829af6a715f,Reconciled from results.csv; raw data retained under results/raw/.
+E3-P00-nodd-E3-r4,E3,P00-nodd-E3,P00,4,5000,0,22,done,01a16ff9-e612-76c1-bacc-976b4128d5cd,Reconciled from results.csv; raw data retained under results/raw/.
+E3-NAIVE-nodd-E3-r4,E3,NAIVE-nodd-E3,NAIVE,4,5000,0,23,done,01a16ffa-1480-7697-9992-40a42b27d287,Reconciled from results.csv; raw data retained under results/raw/.
+E3-P00-nodd-E3-r5,E3,P00-nodd-E3,P00,5,5000,0,24,done,01a16ffa-44fc-72c7-b1d8-aeae89a48b16,Reconciled from results.csv; raw data retained under results/raw/.
+E3-NAIVE-nodd-E3-r5,E3,NAIVE-nodd-E3,NAIVE,5,5000,0,25,done,01a16ffa-7a53-71a5-83ac-10788c527d87,Reconciled from results.csv; raw data retained under results/raw/.
+E4-P00-nodd-E4-r1,E4,P00-nodd-E4,P00,1,5000,0,26,skipped,,"Not run: drift replicate requires a new hardware submission, excluded from this non-hardware closeout."
+E4-P00-nodd-E4-r2,E4,P00-nodd-E4,P00,2,5000,0,27,skipped,,"Not run: drift replicate requires a new hardware submission, excluded from this non-hardware closeout."
+E4-P00-nodd-E4-r3,E4,P00-nodd-E4,P00,3,5000,0,28,skipped,,"Not run: drift replicate requires a new hardware submission, excluded from this non-hardware closeout."
+E4-P00-nodd-E4-r4,E4,P00-nodd-E4,P00,4,5000,0,29,skipped,,"Not run: drift replicate requires a new hardware submission, excluded from this non-hardware closeout."
+E4-P00-nodd-E4-r5,E4,P00-nodd-E4,P00,5,5000,0,30,skipped,,"Not run: drift replicate requires a new hardware submission, excluded from this non-hardware closeout."

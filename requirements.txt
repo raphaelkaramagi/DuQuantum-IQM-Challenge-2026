@@ -1,4 +1,5 @@
-# QEC Challenge — requirements 
+# QEC Challenge — requirements
+# Requires Python >=3.11,<3.14 because qrisp==0.9.9 has no Python 3.14 build.
 # Resonance server URL: https://resonance.iqm.tech
 
 # --- IQM hardware access (Resonance) ---
@@ -20,6 +21,7 @@ numpy==2.4.6
 
 # --- Plotting / notebooks ---
 matplotlib==3.11.2
+scipy==1.18.1
 
 # --- Calibration-aware qubit selection (iqm_utils/get_calibration_data.py) ---
 iqm-qubit-selector

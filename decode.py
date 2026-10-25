@@ -64,12 +64,12 @@ def decode_events(det_events, obs_flips, circuit):
     return p_L, sigma
 
 
-def decode_ler(circuit, shots=20000):
+def decode_ler(circuit, shots=20000, seed=None):
     """
     Run Stim simulation and estimate logical error probability.
     """
 
-    sampler = circuit.compile_detector_sampler()
+    sampler = circuit.compile_detector_sampler(seed=seed)
 
     dets, obs = sampler.sample(
         shots=shots,
